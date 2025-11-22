@@ -13,6 +13,7 @@ A header-only C++20 linear algebra library providing compile-time matrix operati
   - Reduced Row Echelon Form (RREF)
   - Matrix inversion (Gauss-Jordan elimination)
   - LU decomposition
+  - QR decomposition (Gram-Schmidt)
 - **Factory methods**: identity, diagonal, and zero matrices
 - **Type-safe** with compile-time dimension checking
 - **Comprehensive test suite** using Google Test
@@ -116,6 +117,12 @@ auto inv = MatrixUtils<3, 3>::inverse(mat);
 
 // LU decomposition
 auto [L, U] = MatrixUtils<3, 3>::lu(mat);
+
+// QR decomposition (Modified Gram-Schmidt)
+auto [Q, R] = MatrixUtils<3, 3>::qr(mat);
+
+// QR decomposition (Classical Gram-Schmidt, less stable)
+auto [Q2, R2] = MatrixUtils<3, 3>::unstable_qr(mat);
 ```
 
 ## Project Structure
@@ -139,6 +146,7 @@ The project includes extensive unit tests covering:
 - Row Echelon Form transformations
 - Matrix inversion edge cases
 - LU decomposition correctness
+- QR decomposition correctness
 - RREF computation
 
 Run all tests:
