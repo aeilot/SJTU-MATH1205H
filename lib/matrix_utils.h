@@ -170,6 +170,82 @@ namespace LinearAlgebra {
 			}
 			return std::make_tuple(lower, A);
 		}
+
+		// QR Decomposition
+		static std::tuple<Matrix<Rows, Cols>, Matrix<Cols, Cols>> unstable_qr(Matrix<Rows, Cols> A) {
+			if (rank(A) != Cols) {
+				throw std::runtime_error("Matrix A does not have full column rank.");
+			}
+
+			Matrix<Cols, Cols> R = Matrix<Cols, Cols>::zeros();
+
+			for (size_t j = 0; j < Cols; ++j) {
+				for (size_t k = 0; k < j; ++k) {
+					double dot = 0.0;
+					for (size_t i = 0; i < Rows; ++i) {
+						dot += A(i, k) * A(i, j);
+					}
+					R(k, j) = dot;
+
+					for (size_t i = 0; i < Rows; ++i) {
+						A(i, j) -= R(k, j) * A(i, k);
+					}
+				}
+
+				double norm_sq = 0.0;
+				for (size_t i = 0; i < Rows; ++i) {
+					norm_sq += A(i, j) * A(i, j);
+				}
+				R(j, j) = std::sqrt(norm_sq);
+
+				if (R(j, j) < EPSILON) {
+					throw std::runtime_error("Norm is too small.");
+				}
+
+				for (size_t i = 0; i < Rows; ++i) {
+					A(i, j) /= R(j, j);
+				}
+			}
+
+			return std::make_tuple(A, R);
+		}
+
+		// Modified QR
+		static std::tuple<Matrix<Rows, Cols>, Matrix<Cols, Cols>> qr(Matrix<Rows, Cols> A) {
+			Matrix<Cols, Cols> R;
+			Matrix<Rows, Cols> Q = A;
+
+			for (size_t j = 0; j < Cols; ++j) {
+				double norm = 0.0;
+				for (size_t i = 0; i < Rows; ++i) {
+					norm += Q(i, j) * Q(i, j);
+				}
+				norm = std::sqrt(norm);
+
+				if (norm < EPSILON) {
+					throw std::runtime_error("Matrix does not have full column rank; QR not possible.");
+				}
+
+				R(j, j) = norm;
+
+				for (size_t i = 0; i < Rows; ++i) {
+					Q(i, j) /= norm;
+				}
+
+				for (size_t k = j + 1; k < Cols; ++k) {
+					double dot = 0.0;
+					for (size_t i = 0; i < Rows; ++i) {
+						dot += Q(i, j) * Q(i, k);
+					}
+					R(j, k) = dot;
+
+					for (size_t i = 0; i < Rows; ++i) {
+						Q(i, k) -= dot * Q(i, j);
+					}
+				}
+			}
+			return std::make_tuple(Q, R);
+		}
 	};
 }
 

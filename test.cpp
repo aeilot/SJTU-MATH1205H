@@ -7,10 +7,10 @@
 
 using namespace LinearAlgebra;
 
-template<size_t N>
-void ExpectMatrixNear(const Matrix<N, N>& actual, const Matrix<N, N>& expected, double tolerance = 1e-9) {
+template<size_t N, size_t M>
+void ExpectMatrixNear(const Matrix<N, M>& actual, const Matrix<N, M>& expected, double tolerance = 1e-9) {
 	for (size_t i = 0; i < N; ++i) {
-		for (size_t j = 0; j < N; ++j) {
+		for (size_t j = 0; j < M; ++j) {
 			EXPECT_NEAR(actual(i, j), expected(i, j), tolerance)
 				<< "Mismatch at (" << i << "," << j << ")";
 		}
@@ -376,7 +376,6 @@ TEST(MatrixRREFTest, RREF_Singular) {
 	ExpectMatrixNear(rref, expected);
 }
 
-
 TEST(MatrixLUTest, Reconstruction) {
 	// A = [[4, 3], [6, 3]]
 	// L = [[1, 0], [1.5, 1]]
@@ -429,6 +428,126 @@ TEST(MatrixLUTest, ThrowsOnZeroPivot) {
 	EXPECT_THROW((MatrixUtils<2, 2>::lu(A)), std::runtime_error);
 }
 
+TEST(MatrixQRTest, Simple3x3) {
+	// A = [[12, -51, 4], [6, 167, -68], [-4, 24, -41]]
+	// Known Example for QR
+	Matrix<3, 3> A;
+	A(0,0)=12; A(0,1)=-51; A(0,2)=4;
+	A(1,0)=6;  A(1,1)=167; A(1,2)=-68;
+	A(2,0)=-4; A(2,1)=24;  A(2,2)=-41;
+
+	auto [Q, R] = MatrixUtils<3, 3>::qr(A);
+
+	// 1. Verify Reconstruction: A = Q * R
+	auto Recon = Q * R;
+	ExpectMatrixNear(Recon, A);
+
+	// 2. Verify Orthogonality: Q^T * Q = I
+	auto QtQ = Q.transpose() * Q;
+	ExpectMatrixNear(QtQ, Matrix<3, 3>::eye());
+
+	// 3. Verify R is Upper Triangular
+	EXPECT_NEAR(R(1, 0), 0.0, 1e-9);
+	EXPECT_NEAR(R(2, 0), 0.0, 1e-9);
+	EXPECT_NEAR(R(2, 1), 0.0, 1e-9);
+}
+
+TEST(MatrixQRTest, Rectangular_4x3) {
+	// Tall matrix (more rows than cols)
+	Matrix<4, 3> A;
+	A(0,0)=1; A(0,1)=-1; A(0,2)=4;
+	A(1,0)=1; A(1,1)=4;  A(1,2)=-2;
+	A(2,0)=1; A(2,1)=4;  A(2,2)=2;
+	A(3,0)=1; A(3,1)=-1; A(3,2)=0;
+
+	auto [Q, R] = MatrixUtils<4, 3>::qr(A);
+
+	// Q should be 4x3, R should be 3x3
+
+	// 1. Verify Reconstruction
+	auto Recon = Q * R;
+	ExpectMatrixNear(Recon, A);
+
+	// 2. Verify Orthogonality: Q^T * Q = I (3x3)
+	auto QtQ = Q.transpose() * Q;
+	ExpectMatrixNear(QtQ, (Matrix<3, 3>::eye()));
+
+	// 3. Verify R is Upper Triangular
+	EXPECT_NEAR(R(1, 0), 0.0, 1e-9);
+	EXPECT_NEAR(R(2, 0), 0.0, 1e-9);
+	EXPECT_NEAR(R(2, 1), 0.0, 1e-9);
+}
+
+TEST(MatrixQRTest, ThrowsOnRankDeficient) {
+	// Singular matrix (col 2 = col 1)
+	Matrix<3, 3> A;
+	A(0,0)=1; A(0,1)=1; A(0,2)=5;
+	A(1,0)=1; A(1,1)=1; A(1,2)=2;
+	A(2,0)=1; A(2,1)=1; A(2,2)=7;
+
+	EXPECT_THROW((MatrixUtils<3, 3>::qr(A)), std::runtime_error);
+}
+
+
+TEST(MatrixUnstableQRTest, Simple3x3) {
+	// A = [[12, -51, 4], [6, 167, -68], [-4, 24, -41]]
+	// Known Example for QR
+	Matrix<3, 3> A;
+	A(0,0)=12; A(0,1)=-51; A(0,2)=4;
+	A(1,0)=6;  A(1,1)=167; A(1,2)=-68;
+	A(2,0)=-4; A(2,1)=24;  A(2,2)=-41;
+
+	auto [Q, R] = MatrixUtils<3, 3>::unstable_qr(A);
+
+	// 1. Verify Reconstruction: A = Q * R
+	auto Recon = Q * R;
+	ExpectMatrixNear(Recon, A);
+
+	// 2. Verify Orthogonality: Q^T * Q = I
+	auto QtQ = Q.transpose() * Q;
+	ExpectMatrixNear(QtQ, Matrix<3, 3>::eye());
+
+	// 3. Verify R is Upper Triangular
+	EXPECT_NEAR(R(1, 0), 0.0, 1e-9);
+	EXPECT_NEAR(R(2, 0), 0.0, 1e-9);
+	EXPECT_NEAR(R(2, 1), 0.0, 1e-9);
+}
+
+TEST(MatrixUnstableQRTest, Rectangular_4x3) {
+	// Tall matrix (more rows than cols)
+	Matrix<4, 3> A;
+	A(0,0)=1; A(0,1)=-1; A(0,2)=4;
+	A(1,0)=1; A(1,1)=4;  A(1,2)=-2;
+	A(2,0)=1; A(2,1)=4;  A(2,2)=2;
+	A(3,0)=1; A(3,1)=-1; A(3,2)=0;
+
+	auto [Q, R] = MatrixUtils<4, 3>::unstable_qr(A);
+
+	// Q should be 4x3, R should be 3x3
+
+	// 1. Verify Reconstruction
+	auto Recon = Q * R;
+	ExpectMatrixNear(Recon, A);
+
+	// 2. Verify Orthogonality: Q^T * Q = I (3x3)
+	auto QtQ = Q.transpose() * Q;
+	ExpectMatrixNear(QtQ, (Matrix<3, 3>::eye()));
+
+	// 3. Verify R is Upper Triangular
+	EXPECT_NEAR(R(1, 0), 0.0, 1e-9);
+	EXPECT_NEAR(R(2, 0), 0.0, 1e-9);
+	EXPECT_NEAR(R(2, 1), 0.0, 1e-9);
+}
+
+TEST(MatrixUnstableQRTest, ThrowsOnRankDeficient) {
+	// Singular matrix (col 2 = col 1)
+	Matrix<3, 3> A;
+	A(0,0)=1; A(0,1)=1; A(0,2)=5;
+	A(1,0)=1; A(1,1)=1; A(1,2)=2;
+	A(2,0)=1; A(2,1)=1; A(2,2)=7;
+
+	EXPECT_THROW((MatrixUtils<3, 3>::unstable_qr(A)), std::runtime_error);
+}
 
 int main(int argc, char **argv) {
 	::testing::InitGoogleTest(&argc, argv);
