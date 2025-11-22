@@ -28,7 +28,7 @@ A header-only C++20 linear algebra library providing compile-time matrix operati
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/aeilot/SJTU-MATH1205H.git
 cd Matrix
 ```
 
@@ -161,7 +161,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 
-Louis Deng (Chenluo Deng)
+Louis Deng
 
 ## Contributing
 
