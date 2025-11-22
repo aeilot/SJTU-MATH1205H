@@ -71,6 +71,40 @@ namespace LinearAlgebra {
 			return mat;
 		}
 
+		// Get RREF
+		static Matrix<Rows, Cols> RREF(Matrix<Rows, Cols> mat) {
+			for (size_t j = 0; j < Cols; ++j) {
+				size_t pivot_row = j;
+				for (size_t i = j + 1; i < Rows; ++i) {
+					if (std::abs(mat(i, j)) > std::abs(mat(pivot_row, j))) {
+						pivot_row = i;
+					}
+				}
+				if (std::abs(mat(pivot_row, j)) < EPSILON) {
+					continue;
+				}
+				if (pivot_row != j) {
+					for (size_t k = j; k < Cols; ++k) {
+						std::swap(mat(j, k), mat(pivot_row, k));
+					}
+
+				}
+				double nfactor = mat(j, j);
+				for (size_t k = j; k < Cols; ++k) {
+					mat(j, k) /= nfactor;
+				}
+
+				for (size_t i = 0; i < Rows; ++i) {
+					if (i == j) continue;
+					double factor = mat(i, j) / mat(j, j);
+					for (size_t k = j; k < Cols; ++k) {
+						mat(i, k) -= factor * mat(j, k);
+					}
+				}
+			}
+			return mat;
+		}
+
 		// Get Inverse
 		static Matrix<Rows, Cols> inverse(Matrix<Rows, Cols> mat) {
 			static_assert(Rows == Cols, "Inverse is only defined for square matrices.");
@@ -114,6 +148,27 @@ namespace LinearAlgebra {
 				}
 			}
 			return identity;
+		}
+
+		// LU Decomposition
+		static std::tuple<Matrix<Rows, Cols>, Matrix<Rows, Cols>> lu(Matrix<Rows, Cols> A) {
+			static_assert(Rows == Cols, "LU Decomposition is only defined for square matrices.");
+
+			Matrix<Rows, Cols> lower = Matrix<Rows, Cols>::eye();
+
+			for (size_t j = 0; j < Cols; ++j) {
+				if (std::abs(A(j, j)) < EPSILON) {
+					throw std::runtime_error("Could not do LU Decomposition without a Permutation Matrix.");
+				}
+				for (size_t i = j + 1; i < Rows; ++i) {
+					double factor = A(i, j) / A(j, j);
+					lower(i, j) = factor;
+					for (size_t k = j; k < Cols; ++k) {
+						A(i, k) -= factor * A(j, k);
+					}
+				}
+			}
+			return std::make_tuple(lower, A);
 		}
 	};
 }

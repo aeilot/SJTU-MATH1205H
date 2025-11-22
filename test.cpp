@@ -333,6 +333,102 @@ TEST(MatrixInverseTest, LargeMatrixStability_4x4) {
     ExpectMatrixNear(prod, Matrix<4, 4>::eye(), 1e-9);
 }
 
+TEST(MatrixRREFTest, RREF_Identity) {
+	// RREF of Identity should be Identity
+	auto I = Matrix<3, 3>::eye();
+	auto rref = MatrixUtils<3, 3>::RREF(I);
+	ExpectMatrixNear(rref, I);
+}
+
+TEST(MatrixRREFTest, RREF_FullRank) {
+	// Full rank matrix should reduce to Identity
+	// [1 2]
+	// [3 4] -> [1 0], [0 1]
+	Matrix<2, 2> mat;
+	mat(0, 0) = 1; mat(0, 1) = 2;
+	mat(1, 0) = 3; mat(1, 1) = 4;
+
+	auto rref = MatrixUtils<2, 2>::RREF(mat);
+	auto I = Matrix<2, 2>::eye();
+	ExpectMatrixNear(rref, I);
+}
+
+TEST(MatrixRREFTest, RREF_Singular) {
+	// A singular matrix: 1-9 matrix. Rank is 2.
+	// 1 2 3
+	// 4 5 6
+	// 7 8 9
+	// Expected RREF:
+	// 1 0 -1
+	// 0 1  2
+	// 0 0  0
+	Matrix<3, 3> mat;
+	mat(0, 0) = 1; mat(0, 1) = 2; mat(0, 2) = 3;
+	mat(1, 0) = 4; mat(1, 1) = 5; mat(1, 2) = 6;
+	mat(2, 0) = 7; mat(2, 1) = 8; mat(2, 2) = 9;
+
+	Matrix<3, 3> expected;
+	expected(0, 0) = 1; expected(0, 1) = 0; expected(0, 2) = -1;
+	expected(1, 0) = 0; expected(1, 1) = 1; expected(1, 2) = 2;
+	expected(2, 0) = 0; expected(2, 1) = 0; expected(2, 2) = 0;
+
+	auto rref = MatrixUtils<3, 3>::RREF(mat);
+	ExpectMatrixNear(rref, expected);
+}
+
+
+TEST(MatrixLUTest, Reconstruction) {
+	// A = [[4, 3], [6, 3]]
+	// L = [[1, 0], [1.5, 1]]
+	// U = [[4, 3], [0, -1.5]]
+	Matrix<2, 2> A;
+	A(0, 0) = 4; A(0, 1) = 3;
+	A(1, 0) = 6; A(1, 1) = 3;
+
+	auto [L, U] = MatrixUtils<2, 2>::lu(A);
+
+	// Verify A = L * U
+	auto Recon = L * U;
+	ExpectMatrixNear(Recon, A);
+}
+
+TEST(MatrixLUTest, StructureVerification) {
+	// Verify L is lower triangular and U is upper triangular
+	Matrix<3, 3> A;
+	A(0, 0) = 2; A(0, 1) = -1; A(0, 2) = -2;
+	A(1, 0) = -4; A(1, 1) = 6; A(1, 2) = 3;
+	A(2, 0) = -4; A(2, 1) = -2; A(2, 2) = 8;
+
+	auto [L, U] = MatrixUtils<3, 3>::lu(A);
+
+	// Check L (Lower Triangular + Unit Diagonal)
+	EXPECT_DOUBLE_EQ(L(0, 1), 0.0);
+	EXPECT_DOUBLE_EQ(L(0, 2), 0.0);
+	EXPECT_DOUBLE_EQ(L(1, 2), 0.0);
+	EXPECT_DOUBLE_EQ(L(0, 0), 1.0);
+	EXPECT_DOUBLE_EQ(L(1, 1), 1.0);
+	EXPECT_DOUBLE_EQ(L(2, 2), 1.0);
+
+	// Check U (Upper Triangular)
+	EXPECT_DOUBLE_EQ(U(1, 0), 0.0);
+	EXPECT_DOUBLE_EQ(U(2, 0), 0.0);
+	EXPECT_DOUBLE_EQ(U(2, 1), 0.0);
+
+	// Verify Reconstruction
+	ExpectMatrixNear(L * U, A);
+}
+
+TEST(MatrixLUTest, ThrowsOnZeroPivot) {
+	// Matrix requiring permutation (pivot is 0)
+	// [0 1]
+	// [1 0]
+	Matrix<2, 2> A;
+	A(0, 0) = 0; A(0, 1) = 1;
+	A(1, 0) = 1; A(1, 1) = 0;
+
+	EXPECT_THROW((MatrixUtils<2, 2>::lu(A)), std::runtime_error);
+}
+
 
 int main(int argc, char **argv) {
 	::testing::InitGoogleTest(&argc, argv);
