@@ -8,10 +8,12 @@
 #include <vector>
 
 namespace LinearAlgebra {
-	template<class T, size_t Rows, size_t Cols>
+	template<size_t Rows, size_t Cols>
 	class Matrix {
 	private:
+		typedef double T;
 		std::array<T, Rows*Cols> arr;
+
 	public:
 		// Constructor
 		Matrix() {
@@ -40,8 +42,8 @@ namespace LinearAlgebra {
 		}
 
 		// Matrix Addition
-		Matrix<T, Rows, Cols> operator+(const Matrix<T, Rows, Cols>& other) const {
-			Matrix<T, Rows, Cols> result;
+		Matrix<Rows, Cols> operator+(const Matrix<Rows, Cols>& other) const {
+			Matrix<Rows, Cols> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
 					result(i, j) = (*this)(i, j) + other(i, j);
@@ -51,8 +53,8 @@ namespace LinearAlgebra {
 		}
 
 		// Matrix Subtraction
-		Matrix<T, Rows, Cols> operator-(const Matrix<T, Rows, Cols>& other) const {
-			Matrix<T, Rows, Cols> result;
+		Matrix<Rows, Cols> operator-(const Matrix<Rows, Cols>& other) const {
+			Matrix<Rows, Cols> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
 					result(i, j) = (*this)(i, j) - other(i, j);
@@ -62,8 +64,8 @@ namespace LinearAlgebra {
 		}
 
 		// Scalar Multiplication and Division
-		Matrix<T, Rows, Cols> operator*(const T& scalar) const {
-			Matrix<T, Rows, Cols> result;
+		Matrix<Rows, Cols> operator*(const T& scalar) const {
+			Matrix<Rows, Cols> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
 					result(i, j) = (*this)(i, j) * scalar;
@@ -71,8 +73,8 @@ namespace LinearAlgebra {
 			}
 			return result;
 		}
-		Matrix<T, Rows, Cols> operator/(const T& scalar) const {
-			Matrix<T, Rows, Cols> result;
+		Matrix<Rows, Cols> operator/(const T& scalar) const {
+			Matrix<Rows, Cols> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
 					result(i, j) = (*this)(i, j) / scalar;
@@ -82,8 +84,8 @@ namespace LinearAlgebra {
 		}
 
 		// Transposition
-		Matrix<T, Cols, Rows> transpose() const {
-			Matrix<T, Cols, Rows> result;
+		Matrix<Cols, Rows> transpose() const {
+			Matrix<Cols, Rows> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
 					result(j, i) = (*this)(i, j);
@@ -94,8 +96,8 @@ namespace LinearAlgebra {
 
 		// Matrix Multiplication
 		template<size_t OtherCols>
-		Matrix<T, Rows, OtherCols> operator*(const Matrix<T, Cols, OtherCols>& other) const {
-			Matrix<T, Rows, OtherCols> result;
+		Matrix<Rows, OtherCols> operator*(const Matrix<Cols, OtherCols>& other) const {
+			Matrix<Rows, OtherCols> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < OtherCols; ++j) {
 					result(i, j) = T();
@@ -113,9 +115,9 @@ namespace LinearAlgebra {
 		}
 
 		// Identity Matrix
-		static Matrix<T, Rows, Cols> eye() {
+		static Matrix<Rows, Cols> eye() {
 			static_assert(Rows == Cols, "Identity matrix must be square.");
-			Matrix<T, Rows, Cols> result;
+			Matrix<Rows, Cols> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
 					result(i, j) = (i == j) ? T(1) : T(0);
@@ -125,8 +127,8 @@ namespace LinearAlgebra {
 		}
 
 		// Zero Matrix
-		static Matrix<T, Rows, Cols> zeros() {
-			Matrix<T, Rows, Cols> result;
+		static Matrix<Rows, Cols> zeros() {
+			Matrix<Rows, Cols> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
 					result(i, j) = T(0);
@@ -136,9 +138,9 @@ namespace LinearAlgebra {
 		}
 
 		// Diagonal Matrix
-		static Matrix<T, Rows, Cols> diag(const std::vector<T>& values) {
+		static Matrix<Rows, Cols> diag(const std::vector<T>& values) {
 			static_assert(Rows == Cols, "Diagonal matrix must be square.");
-			Matrix<T, Rows, Cols> result = zeros();
+			Matrix<Rows, Cols> result = zeros();
 			size_t len = std::min(Rows, values.size());
 			for (size_t i = 0; i < len; ++i) {
 				result(i, i) = values[i];
@@ -147,9 +149,9 @@ namespace LinearAlgebra {
 		}
 
 		// Scalar Matrix
-		static Matrix<T, Rows, Cols> scalar(const T& value) {
+		static Matrix<Rows, Cols> scalar(const T& value) {
 			static_assert(Rows == Cols, "Scalar matrix must be square.");
-			Matrix<T, Rows, Cols> result;
+			Matrix<Rows, Cols> result;
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
 					result(i, j) = (i == j) ? value : T(0);
@@ -159,10 +161,10 @@ namespace LinearAlgebra {
 		}
 
 		// Get number of rows and columns
-		size_t numRows() const {
+		size_t row() const {
 			return Rows;
 		}
-		size_t numCols() const {
+		size_t col() const {
 			return Cols;
 		}
 

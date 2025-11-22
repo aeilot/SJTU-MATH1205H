@@ -14,7 +14,8 @@ enable_testing()
 FetchContent_MakeAvailable(googletest)
 
 add_executable(Matrix test.cpp
-        lib/matrix.h)
+        lib/matrix.h
+        lib/matrix_utils.h)
 
 target_link_libraries(
         Matrix
