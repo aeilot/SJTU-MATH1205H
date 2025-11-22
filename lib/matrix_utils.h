@@ -44,6 +44,7 @@ namespace LinearAlgebra {
 
 		// Get RET
 		static Matrix<Rows, Cols> RET(Matrix<Rows, Cols> mat) {
+			size_t rank = 0;
 			for (size_t j = 0; j < Cols; ++j) {
 				size_t pivot_row = rank;
 				for (size_t i = rank + 1; i < Rows; ++i) {
@@ -65,6 +66,7 @@ namespace LinearAlgebra {
 						mat(i, k) -= factor * mat(pivot_row, k);
 					}
 				}
+				rank++;
 			}
 			return mat;
 		}

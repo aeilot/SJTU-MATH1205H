@@ -1,0 +1,5 @@
+if(EXISTS "/Users/aeilot/Developer/Matrix/build/Matrix[1]_tests.cmake")
+  include("/Users/aeilot/Developer/Matrix/build/Matrix[1]_tests.cmake")
+else()
+  add_test(Matrix_NOT_BUILT Matrix_NOT_BUILT)
+endif()
