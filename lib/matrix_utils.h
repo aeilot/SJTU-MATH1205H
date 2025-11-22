@@ -71,6 +71,50 @@ namespace LinearAlgebra {
 			return mat;
 		}
 
+		// Get Inverse
+		static Matrix<Rows, Cols> inverse(Matrix<Rows, Cols> mat) {
+			static_assert(Rows == Cols, "Inverse is only defined for square matrices.");
+			Matrix<Rows, Cols> identity = Matrix<Rows, Cols>::eye();
+			for (size_t j = 0; j < Cols; ++j) {
+				size_t pivot_row = j;
+				for (size_t i = j + 1; i < Rows; ++i) {
+					if (std::abs(mat(i, j)) > std::abs(mat(pivot_row, j))) {
+						pivot_row = i;
+					}
+				}
+				if (std::abs(mat(pivot_row, j)) < EPSILON) {
+					throw std::runtime_error("The matrix is singular.");
+				}
+				if (pivot_row != j) {
+					for (size_t k = j; k < Cols; ++k) {
+						std::swap(mat(j, k), mat(pivot_row, k));
+					}
+
+					for (size_t k = 0; k < Cols; ++k) {
+						std::swap(identity(j, k), identity(pivot_row, k));
+					}
+				}
+				double nfactor = mat(j, j);
+				for (size_t k = j; k < Cols; ++k) {
+					mat(j, k) /= nfactor;
+				}
+				for (size_t k = 0; k < Cols; ++k) {
+					identity(j, k) /= nfactor;
+				}
+				for (size_t i = 0; i < Rows; ++i) {
+					if (i == j) continue;
+					double factor = mat(i, j) / mat(j, j);
+					for (size_t k = j; k < Cols; ++k) {
+						mat(i, k) -= factor * mat(j, k);
+					}
+					for (size_t k = 0; k < Cols; ++k) {
+						identity(i, k) -= factor * identity(j, k);
+					}
+
+				}
+			}
+			return identity;
+		}
 	};
 }
 

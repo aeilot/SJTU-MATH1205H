@@ -1,9 +1,21 @@
 #include <iostream>
+#include <stdexcept>
+#include <cmath>
 #include <gtest/gtest.h>
 #include "lib/matrix.h"
 #include "lib/matrix_utils.h"
 
 using namespace LinearAlgebra;
+
+template<size_t N>
+void ExpectMatrixNear(const Matrix<N, N>& actual, const Matrix<N, N>& expected, double tolerance = 1e-9) {
+	for (size_t i = 0; i < N; ++i) {
+		for (size_t j = 0; j < N; ++j) {
+			EXPECT_NEAR(actual(i, j), expected(i, j), tolerance)
+				<< "Mismatch at (" << i << "," << j << ")";
+		}
+	}
+}
 
 TEST(MatrixTest, DefaultConstructorCreatesEmptyMatrix) {
     Matrix<2, 2> mat;
@@ -244,6 +256,83 @@ TEST(MatrixUtilsTest, RETPreservesRowEchelonForm) {
     EXPECT_NEAR(ret(2, 0), 0.0, EPSILON);
     EXPECT_NEAR(ret(2, 1), 0.0, EPSILON);
 }
+
+
+TEST(MatrixInverseTest, IdentityMatrixInversion) {
+    // The inverse of Identity is Identity
+    auto I = Matrix<3, 3>::eye();
+    auto Inv = MatrixUtils<3, 3>::inverse(I);
+    ExpectMatrixNear(Inv, I);
+}
+
+TEST(MatrixInverseTest, Simple2x2Inversion) {
+    // Matrix A = [[4, 7], [2, 6]]
+    // Det(A) = 10
+    // Inv(A) = [[0.6, -0.7], [-0.2, 0.4]]
+    Matrix<2, 2> mat;
+    mat(0, 0) = 4.0; mat(0, 1) = 7.0;
+    mat(1, 0) = 2.0; mat(1, 1) = 6.0;
+
+    Matrix<2, 2> expected;
+    expected(0, 0) = 0.6;  expected(0, 1) = -0.7;
+    expected(1, 0) = -0.2; expected(1, 1) = 0.4;
+
+    auto result = MatrixUtils<2,2>::inverse(mat);
+    ExpectMatrixNear(result, expected);
+}
+
+TEST(MatrixInverseTest, ThrowsOnSingularMatrix) {
+    // Matrix A = [[1, 2], [2, 4]] -> Rows are linearly dependent
+    Matrix<2, 2> singular;
+    singular(0, 0) = 1.0; singular(0, 1) = 2.0;
+    singular(1, 0) = 2.0; singular(1, 1) = 4.0;
+
+	EXPECT_THROW((MatrixUtils<2, 2>::inverse(singular)), std::runtime_error);
+}
+
+TEST(MatrixInverseTest, ThrowsOnNearSingularMatrix) {
+    // Matrix with pivot smaller than EPSILON (1e-9)
+    Matrix<2, 2> tiny;
+    tiny(0, 0) = 1e-10; tiny(0, 1) = 0.0;
+    tiny(1, 0) = 0.0;   tiny(1, 1) = 1e-10;
+
+    EXPECT_THROW((MatrixUtils<2, 2>::inverse(tiny)), std::runtime_error);
+}
+
+TEST(MatrixInverseTest, InverseTimesOriginalIsIdentity_3x3) {
+    // A somewhat complex 3x3 matrix
+    Matrix<3, 3> mat;
+    mat(0, 0) = 2; mat(0, 1) = -1; mat(0, 2) = 0;
+    mat(1, 0) = -1; mat(1, 1) = 2; mat(1, 2) = -1;
+    mat(2, 0) = 0; mat(2, 1) = -1; mat(2, 2) = 2;
+
+    auto inv = MatrixUtils<3, 3>::inverse(mat);
+    auto identity = Matrix<3, 3>::eye();
+
+    // Verify A * A_inv = I
+    auto result = mat * inv;
+    ExpectMatrixNear(result, identity, 1e-9);
+
+    // Verify A_inv * A = I (commutativity of inverse)
+    auto result2 = inv * mat;
+    ExpectMatrixNear(result2, identity, 1e-9);
+}
+
+TEST(MatrixInverseTest, LargeMatrixStability_4x4) {
+    // Using a Hilbert Matrix section or similar ill-conditioned but invertible matrix
+    // to test numerical stability.
+    Matrix<4, 4> mat;
+    mat(0,0)=4; mat(0,1)=0;  mat(0,2)=0; mat(0,3)=0;
+    mat(1,0)=0; mat(1,1)=0;  mat(1,2)=2; mat(1,3)=0;
+    mat(2,0)=0; mat(2,1)=1;  mat(2,2)=2; mat(2,3)=0;
+    mat(3,0)=1; mat(3,1)=0;  mat(3,2)=0; mat(3,3)=1;
+
+    auto inv = MatrixUtils<4, 4>::inverse(mat);
+    auto prod = mat * inv;
+
+    ExpectMatrixNear(prod, Matrix<4, 4>::eye(), 1e-9);
+}
+
 
 int main(int argc, char **argv) {
 	::testing::InitGoogleTest(&argc, argv);
