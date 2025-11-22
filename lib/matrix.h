@@ -182,7 +182,7 @@ namespace LinearAlgebra {
 		void print() const {
 			for (size_t i = 0; i < Rows; ++i) {
 				for (size_t j = 0; j < Cols; ++j) {
-					std::cout << arr[i * Cols + j];
+					std::cout << arr[i * Cols + j] << " ";
 				}
 				std::cout << std::endl;
 			}
