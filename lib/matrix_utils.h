@@ -16,6 +16,8 @@ namespace LinearAlgebra {
 		static size_t rank(Matrix<Rows, Cols> mat) {
 			size_t rank = 0;
 			for (size_t j = 0; j < Cols; ++j) {
+				if (rank >= Rows) break;
+
 				size_t pivot_row = rank;
 				for (size_t i = rank + 1; i < Rows; ++i) {
 					if (std::abs(mat(i, j)) > std::abs(mat(pivot_row, j))) {
@@ -73,9 +75,10 @@ namespace LinearAlgebra {
 
 		// Get RREF
 		static Matrix<Rows, Cols> RREF(Matrix<Rows, Cols> mat) {
+			size_t current_row = 0;
 			for (size_t j = 0; j < Cols; ++j) {
-				size_t pivot_row = j;
-				for (size_t i = j + 1; i < Rows; ++i) {
+				size_t pivot_row = current_row;
+				for (size_t i = current_row + 1; i < Rows; ++i) {
 					if (std::abs(mat(i, j)) > std::abs(mat(pivot_row, j))) {
 						pivot_row = i;
 					}
@@ -83,9 +86,9 @@ namespace LinearAlgebra {
 				if (std::abs(mat(pivot_row, j)) < EPSILON) {
 					continue;
 				}
-				if (pivot_row != j) {
+				if (pivot_row != current_row) {
 					for (size_t k = j; k < Cols; ++k) {
-						std::swap(mat(j, k), mat(pivot_row, k));
+						std::swap(mat(current_row, k), mat(pivot_row, k));
 					}
 
 				}
@@ -101,6 +104,7 @@ namespace LinearAlgebra {
 						mat(i, k) -= factor * mat(j, k);
 					}
 				}
+				current_row++;
 			}
 			return mat;
 		}

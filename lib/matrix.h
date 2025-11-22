@@ -6,6 +6,8 @@
 #define MATRIX_MATRIX_H
 #include <iostream>
 #include <vector>
+#include <array>
+#include <algorithm>
 
 namespace LinearAlgebra {
 	template<size_t Rows, size_t Cols>
@@ -19,7 +21,7 @@ namespace LinearAlgebra {
 		Matrix() {
 			arr.fill(T(0));
 		}
-		Matrix(std::array<T, Cols> arr) : arr(arr) {}
+		Matrix(std::array<T, Rows * Cols> input_arr) : arr(input_arr) {}
 		T& operator()(size_t row, size_t col) {
 			return arr[row * Cols + col];
 		}
