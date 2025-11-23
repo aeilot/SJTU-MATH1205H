@@ -48,6 +48,7 @@ namespace LinearAlgebra {
 		static Matrix<Rows, Cols> RET(Matrix<Rows, Cols> mat) {
 			size_t rank = 0;
 			for (size_t j = 0; j < Cols; ++j) {
+				if (rank >= Rows) break;
 				size_t pivot_row = rank;
 				for (size_t i = rank + 1; i < Rows; ++i) {
 					if (std::abs(mat(i, j)) > std::abs(mat(pivot_row, j))) {
@@ -77,6 +78,7 @@ namespace LinearAlgebra {
 		static Matrix<Rows, Cols> RREF(Matrix<Rows, Cols> mat) {
 			size_t current_row = 0;
 			for (size_t j = 0; j < Cols; ++j) {
+				if (current_row >= Rows) break;
 				size_t pivot_row = current_row;
 				for (size_t i = current_row + 1; i < Rows; ++i) {
 					if (std::abs(mat(i, j)) > std::abs(mat(pivot_row, j))) {
